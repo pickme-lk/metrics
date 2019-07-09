@@ -6,15 +6,15 @@ func NoopReporter() Reporter {
 	return noopReporter{}
 }
 
-func (noopReporter) Counter(path string, labels []string) Counter {
+func (noopReporter) Counter(MetricConf) Counter {
 	return noopCounter{}
 }
 
-func (noopReporter) Observer(path string, labels []string) Observer {
+func (noopReporter) Observer(MetricConf) Observer {
 	return noopObserver{}
 }
 
-func (noopReporter) Gauge(path string, labels []string) Gauge {
+func (noopReporter) Gauge(MetricConf) Gauge {
 	return noopGauge{}
 }
 

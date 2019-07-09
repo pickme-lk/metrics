@@ -7,7 +7,9 @@ import (
 
 type prometheusReporter struct {
 	registry             prometheus.Registerer
+	prefix               string
 	namespace, subSystem string
+	constLabels          map[string]string
 	availableMetrics     struct {
 		counters  map[string]Counter
 		histos    map[string]Observer
@@ -19,10 +21,11 @@ type prometheusReporter struct {
 
 func PrometheusReporter(system string, subsystem string) Reporter {
 	r := &prometheusReporter{
-		registry:  prometheus.DefaultRegisterer,
-		namespace: system,
-		subSystem: subsystem,
-		Mutex:     new(sync.Mutex),
+		registry:    prometheus.DefaultRegisterer,
+		namespace:   system,
+		subSystem:   subsystem,
+		constLabels: map[string]string{},
+		Mutex:       new(sync.Mutex),
 	}
 
 	r.availableMetrics.counters = make(map[string]Counter)
@@ -33,21 +36,26 @@ func PrometheusReporter(system string, subsystem string) Reporter {
 	return r
 }
 
-func (r *prometheusReporter) Counter(path string, labels []string) Counter {
+func (r *prometheusReporter) Reporter(labels []string) Reporter {
+	return nil
+}
+
+func (r *prometheusReporter) Counter(conf MetricConf) Counter {
 
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 
-	if c, ok := r.availableMetrics.counters[path]; ok {
+	if c, ok := r.availableMetrics.counters[conf.Path]; ok {
 		return c
 	}
 
 	promCounter := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name:      path,
-		Help:      path,
-		Namespace: r.namespace,
-		Subsystem: r.subSystem,
-	}, labels)
+		Name:        conf.Path,
+		Help:        conf.Path,
+		Namespace:   r.namespace,
+		Subsystem:   r.subSystem,
+		ConstLabels: r.constLabels,
+	}, conf.Labels)
 
 	if err := r.registry.Register(promCounter); err != nil {
 		if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
@@ -59,26 +67,26 @@ func (r *prometheusReporter) Counter(path string, labels []string) Counter {
 		counter: promCounter,
 	}
 
-	r.availableMetrics.counters[path] = c
+	r.availableMetrics.counters[conf.Path] = c
 
 	return c
 }
 
-func (r *prometheusReporter) Gauge(path string, labels []string) Gauge {
+func (r *prometheusReporter) Gauge(conf MetricConf) Gauge {
 
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 
-	if g, ok := r.availableMetrics.gauges[path]; ok {
+	if g, ok := r.availableMetrics.gauges[conf.Path]; ok {
 		return g
 	}
 
 	promGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name:      path,
-		Help:      path,
+		Name:      conf.Path,
+		Help:      conf.Path,
 		Namespace: r.namespace,
 		Subsystem: r.subSystem,
-	}, labels)
+	}, conf.Labels)
 
 	if err := r.registry.Register(promGauge); err != nil {
 		if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
@@ -90,27 +98,27 @@ func (r *prometheusReporter) Gauge(path string, labels []string) Gauge {
 		gauge: promGauge,
 	}
 
-	r.availableMetrics.gauges[path] = g
+	r.availableMetrics.gauges[conf.Path] = g
 
 	return g
 
 }
 
-func (r *prometheusReporter) Observer(path string, labels []string) Observer {
+func (r *prometheusReporter) Observer(conf MetricConf) Observer {
 
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 
-	if o, ok := r.availableMetrics.summaries[path]; ok {
+	if o, ok := r.availableMetrics.summaries[conf.Path]; ok {
 		return o
 	}
 
 	promObserver := prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:      path,
-		Help:      path,
+		Name:      conf.Path,
+		Help:      conf.Path,
 		Namespace: r.namespace,
 		Subsystem: r.subSystem,
-	}, labels)
+	}, conf.Labels)
 
 	if err := r.registry.Register(promObserver); err != nil {
 		if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
@@ -122,26 +130,26 @@ func (r *prometheusReporter) Observer(path string, labels []string) Observer {
 		observer: promObserver,
 	}
 
-	r.availableMetrics.summaries[path] = h
+	r.availableMetrics.summaries[conf.Path] = h
 
 	return h
 }
 
-func (r *prometheusReporter) Summary(path string, labels []string) Observer {
+func (r *prometheusReporter) Summary(conf MetricConf) Observer {
 
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 
-	if o, ok := r.availableMetrics.summaries[path]; ok {
+	if o, ok := r.availableMetrics.summaries[conf.Path]; ok {
 		return o
 	}
 
 	promObserver := prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:      path,
-		Help:      path,
+		Name:      conf.Path,
+		Help:      conf.Path,
 		Namespace: r.namespace,
 		Subsystem: r.subSystem,
-	}, labels)
+	}, conf.Labels)
 
 	if err := r.registry.Register(promObserver); err != nil {
 		if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
@@ -153,26 +161,26 @@ func (r *prometheusReporter) Summary(path string, labels []string) Observer {
 		observer: promObserver,
 	}
 
-	r.availableMetrics.summaries[path] = h
+	r.availableMetrics.summaries[conf.Path] = h
 
 	return h
 }
 
-func (r *prometheusReporter) Histogram(path string, labels []string) Observer {
+func (r *prometheusReporter) Histogram(conf MetricConf) Observer {
 
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 
-	if o, ok := r.availableMetrics.histos[path]; ok {
+	if o, ok := r.availableMetrics.histos[conf.Path]; ok {
 		return o
 	}
 
 	promObserver := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:      path,
-		Help:      path,
+		Name:      conf.Path,
+		Help:      conf.Path,
 		Namespace: r.namespace,
 		Subsystem: r.subSystem,
-	}, labels)
+	}, conf.Labels)
 
 	if err := r.registry.Register(promObserver); err != nil {
 		if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
@@ -184,7 +192,7 @@ func (r *prometheusReporter) Histogram(path string, labels []string) Observer {
 		observer: promObserver,
 	}
 
-	r.availableMetrics.histos[path] = h
+	r.availableMetrics.histos[conf.Path] = h
 
 	return h
 }
