@@ -82,10 +82,11 @@ func (r *prometheusReporter) Gauge(conf MetricConf) Gauge {
 	}
 
 	promGauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name:      conf.Path,
-		Help:      conf.Path,
-		Namespace: r.namespace,
-		Subsystem: r.subSystem,
+		Name:        conf.Path,
+		Help:        conf.Path,
+		Namespace:   r.namespace,
+		Subsystem:   r.subSystem,
+		ConstLabels: r.constLabels,
 	}, conf.Labels)
 
 	if err := r.registry.Register(promGauge); err != nil {
@@ -114,10 +115,11 @@ func (r *prometheusReporter) Observer(conf MetricConf) Observer {
 	}
 
 	promObserver := prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:      conf.Path,
-		Help:      conf.Path,
-		Namespace: r.namespace,
-		Subsystem: r.subSystem,
+		Name:        conf.Path,
+		Help:        conf.Path,
+		Namespace:   r.namespace,
+		Subsystem:   r.subSystem,
+		ConstLabels: r.constLabels,
 	}, conf.Labels)
 
 	if err := r.registry.Register(promObserver); err != nil {
@@ -145,10 +147,11 @@ func (r *prometheusReporter) Summary(conf MetricConf) Observer {
 	}
 
 	promObserver := prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:      conf.Path,
-		Help:      conf.Path,
-		Namespace: r.namespace,
-		Subsystem: r.subSystem,
+		Name:        conf.Path,
+		Help:        conf.Path,
+		Namespace:   r.namespace,
+		Subsystem:   r.subSystem,
+		ConstLabels: r.constLabels,
 	}, conf.Labels)
 
 	if err := r.registry.Register(promObserver); err != nil {
@@ -176,10 +179,11 @@ func (r *prometheusReporter) Histogram(conf MetricConf) Observer {
 	}
 
 	promObserver := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:      conf.Path,
-		Help:      conf.Path,
-		Namespace: r.namespace,
-		Subsystem: r.subSystem,
+		Name:        conf.Path,
+		Help:        conf.Path,
+		Namespace:   r.namespace,
+		Subsystem:   r.subSystem,
+		ConstLabels: r.constLabels,
 	}, conf.Labels)
 
 	if err := r.registry.Register(promObserver); err != nil {
