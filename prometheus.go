@@ -36,11 +36,16 @@ func PrometheusReporter(conf ReporterConf) Reporter {
 }
 
 func (r *prometheusReporter) Reporter(conf ReporterConf) Reporter {
+	rConf := ReporterConf{
+		System:      r.namespace,
+		Subsystem:   r.subSystem,
+		ConstLabels: r.constLabels,
+	}
 	if conf.Subsystem != `` {
-		conf.Subsystem = fmt.Sprintf(`%s_%s`, r.subSystem, conf.Subsystem)
+		rConf.Subsystem = fmt.Sprintf(`%s_%s`, r.subSystem, conf.Subsystem)
 	}
 
-	return PrometheusReporter(conf)
+	return PrometheusReporter(rConf)
 }
 
 func (r *prometheusReporter) Counter(conf MetricConf) Counter {
