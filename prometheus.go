@@ -39,7 +39,7 @@ func (r *prometheusReporter) Reporter(conf ReporterConf) Reporter {
 	rConf := ReporterConf{
 		System:      r.namespace,
 		Subsystem:   r.subSystem,
-		ConstLabels: r.constLabels,
+		ConstLabels: mergeLabels(r.constLabels, conf.ConstLabels),
 	}
 	if conf.Subsystem != `` {
 		rConf.Subsystem = fmt.Sprintf(`%s_%s`, r.subSystem, conf.Subsystem)
